@@ -37,11 +37,11 @@ inline_keyboard = InlineKeyboardMarkup(
 @dp.callback_query()
 async def callback_handler(callback: types.CallbackQuery):
     if callback.data == "start":
-        await callback.message.answer("Напиши /start, чтобы начать работу с ботом") #отправляет пользователю сообщение с текстом "Привет! Я тестовый бот" "Напиши /start, чтобы начать работу с ботом")
+        await callback.message.answer("Напиши /start, чтобы начать работу с ботом") #отправляет пользователю сообщение с текстом ("Привет! Я тестовый бот" "Напиши /start, чтобы начать работу с ботом")
     elif callback.data == "help":
-        await callback.message.answer("Альтернатива помощь или напиши /help") #отправляет пользователю сообщение с текстом "Привет! Я тестовый бот" "Напиши /start, чтобы начать работу с ботом")
+        await callback.message.answer("Альтернатива помощь или напиши /help") #отправляет пользователю сообщение с текстом ("Альтернатива помощь или напиши /help")
     elif callback.data == "random":
-        await callback.message.answer("Хочешь рандомное число? Напиши: /random") #отправляет пользователю сообщение с текстом "Привет! Я тестовый бот" "Напиши /start, чтобы начать работу с ботом")
+        await callback.message.answer("Хочешь рандомное число? Напиши: /random") #отправляет пользователю сообщение с текстом ("Хочешь рандомное число? Напиши: /random")
 
 
 @dp.message(Command("start")) # эта функция будет выполнятся, при вводе данной команды
