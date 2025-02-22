@@ -9,7 +9,7 @@ cd tgbot-itstep
 pip install - r requirements.txt
 python bot.py
 ```
-
+```
 ### Инлайн клавиатуры - наши кнопки в боте
 inline_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -17,3 +17,4 @@ inline_keyboard = InlineKeyboardMarkup(
         [InlineKeyboardButton(text="Нажми", callback_data="button_click")]# создаём кнопку перейти на сайт 
     ]
 )
+```
