@@ -1,80 +1,142 @@
-import asyncio # это для запуска бота
+import asyncio
 import random
-from aiogram import Bot, Dispatcher, types # это библиотека для создания Tg-бота.
+from aiogram import Bot, Dispatcher, types
 from aiogram.types import (
     ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 )
-#ReplyKeyboardMarkup - инициальзация обычной клавиатуры
-# KeyboardButton - кнопка для обычной клавиатуры на телефоне 
-# InlineKeyboardMarkup - инлайн клавиатуры
-# InlineKeyboardButton - кнопка для инлайн клавиатуры
-
 from aiogram.filters import Command
-from aiogram.client.default import DefaultBotProperties # нужно для указания стандартных настроек бота
-from api import Token 
-from weather import get_weather
+from aiogram.client.default import DefaultBotProperties
+from weather import get_weather, get_available_cities
+from api import TOKEN
 
-# Создаем объект - бот и диспетчер
-bot = Bot(token=Token, default=DefaultBotProperties(parse_mode="HTML"))
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher()
 
-# Основная клавиатура
 main_keyboard = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text="Привет!"), KeyboardButton(text="Помощь")]
+        [KeyboardButton(text="Начать"), KeyboardButton(text="Помощь")],
+        [KeyboardButton(text="Погода"), KeyboardButton(text="Рандомное число")],
+        [KeyboardButton(text="🇰🇿 Казахстан"), KeyboardButton(text="🇷🇺 Россия")]
     ],
     resize_keyboard=True
 )
 
-# Инлайн клавиатуры
 inline_keyboard = InlineKeyboardMarkup(
     inline_keyboard=[
-        [InlineKeyboardButton(text="Начать", callback_data="start")], # создаём кнопку начать
-        [InlineKeyboardButton(text="Помощь", callback_data="help")],# создаём кнопку помощь 
-        [InlineKeyboardButton(text="Рандомное число", callback_data="random")]
+        [InlineKeyboardButton(text="Начать", callback_data="start")],
+        [InlineKeyboardButton(text="Помощь", callback_data="help")],
+        [InlineKeyboardButton(text="Рандомное число", callback_data="random")],
+        [InlineKeyboardButton(text="Погода", callback_data="weather")]
     ]
 )
 
 @dp.callback_query()
 async def callback_handler(callback: types.CallbackQuery):
     if callback.data == "start":
-        await callback.message.answer("Напиши /start, чтобы начать работу с ботом") #отправляет пользователю сообщение с текстом ("Привет! Я тестовый бот" "Напиши /start, чтобы начать работу с ботом")
+        await start(callback.message)  
     elif callback.data == "help":
-        await callback.message.answer("Альтернатива помощь или напиши /help") #отправляет пользователю сообщение с текстом ("Альтернатива помощь или напиши /help")
+        await help_command(callback.message)  
     elif callback.data == "random":
-        await callback.message.answer("Хочешь рандомное число? Напиши: /random") #отправляет пользователю сообщение с текстом ("Хочешь рандомное число? Напиши: /random")
+        await random_command(callback.message)  
+    elif callback.data == "weather":
+        await weather_command(callback.message)  
 
+cities = get_available_cities()
+@dp.message(lambda message: message.text in sum(cities.values(), []))
+async def send_weather(message: types.Message):
+    city = message.text
+    weather_info = await get_weather(city)
+    await message.answer(weather_info)
 
-@dp.message(Command("start")) # эта функция будет выполнятся, при вводе данной команды
+@dp.message(Command("start"))
 async def start(message: types.Message):
-    await message.answer("Привет! Я тестовый бот <b>test</b>", reply_markup=main_keyboard) # отправляет пользователю сообщение с текстом "Привет! Я тестовый бот"
-
-@dp.message(lambda message: message.text == "Привет!") # эта функция будет выполнятся, когда пользователь напишет "Привет!"
-async def hello(message: types.Message):
-    await message.answer("Привет!!! Как дела?", reply_markup=inline_keyboard) # отправляет пользователю сообщение с текстом "Привет!!! Как дела?"
+    await message.answer("Привет! Я тестовый бот <b>test</b>", reply_markup=main_keyboard)
 
 @dp.message(Command("random"))
 async def random_command(message: types.Message):
-    number = random.randint(1,100)
-    await message.answer(f"Случайное число: {number}")
+    number = random.randint(1, 100)
+    await message.answer(f"🎲 Случайное число: {number}")
 
 @dp.message(Command("help"))
-async def help_commmand(message: types.Message):
+async def help_command(message: types.Message):
     command_text = (
-        "Доступные команды: \n"
-        "/start - Начать работу с ботом \n"
-        "/help - Показывает список команд \n"
-        "/random - Случайное число"
+        "📌 <b>Доступные команды:</b>\n"
+        "/start - Начать работу с ботом\n"
+        "/help - Показывает список команд\n"
+        "/random - Случайное число\n"
+        "/weather - Узнать погоду"
     )
     await message.answer(command_text)
 
 @dp.message(Command("weather"))
-async def weather_command(message : types.Message):
+async def weather_command(message: types.Message):
     weather_info = await get_weather()
-    await message.reply(weather_info)
+    await message.answer(weather_info)
 
-async def main(): # основная функция, которая запускает нашего бота
-    await dp.start_polling(bot) # бот отслеживает новые команды от пользователя
+@dp.message(lambda message: message.text == "Начать")
+async def start_button(message: types.Message):
+    await start(message)
 
-if __name__ == "__main__": # данная команда проверяет, что бот запущен напрямую пользователем
-    asyncio.run(main()) # Запускает функцию, которая включает бота
+@dp.message(lambda message: message.text == "Помощь")
+async def help_button(message: types.Message):
+    await help_command(message)
+
+@dp.message(lambda message: message.text == "Рандомное число")
+async def random_button(message: types.Message):
+    await random_command(message)
+
+@dp.message(lambda message: message.text == "Погода")
+async def weather_button(message: types.Message):
+    await weather_command(message)
+
+async def main():
+    await dp.start_polling(bot)
+
+# 📌 Клавиатуры для выбора города
+cities = get_available_cities()
+
+country_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="🇰🇿 Казахстан"), KeyboardButton(text="🇷🇺 Россия")]
+    ],
+    resize_keyboard=True
+)
+
+kazakhstan_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text=city) for city in cities["Казахстан"]],
+        [KeyboardButton(text="⬅ Назад")]
+    ],
+    resize_keyboard=True
+)
+
+russia_keyboard = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text=city) for city in cities["Россия"]],
+        [KeyboardButton(text="⬅ Назад")]
+    ],
+    resize_keyboard=True
+)
+
+# 📌 Обработчик выбора страны
+@dp.message(lambda message: message.text in ["🇰🇿 Казахстан", "🇷🇺 Россия"])
+async def select_country(message: types.Message):
+    if message.text == "🇰🇿 Казахстан":
+        await message.answer("🏙 Выберите город в Казахстане:", reply_markup=kazakhstan_keyboard)
+    elif message.text == "🇷🇺 Россия":
+        await message.answer("🏙 Выберите город в России:", reply_markup=russia_keyboard)
+
+# 📌 Обработчик выбора города
+@dp.message(lambda message: message.text in sum(cities.values(), []))
+async def select_city(message: types.Message):
+    city = message.text
+    weather_info = await get_weather(city)
+    await message.answer(weather_info, reply_markup=country_keyboard)
+
+# 📌 Обработчик кнопки "⬅ Назад"
+@dp.message(lambda message: message.text == "⬅ Назад")
+async def go_back(message: types.Message):
+    await message.answer("🔙 Выберите страну:", reply_markup=country_keyboard)
+
+if __name__ == "__main__":
+    asyncio.run(main())

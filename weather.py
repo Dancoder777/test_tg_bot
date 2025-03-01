@@ -1,9 +1,12 @@
 import aiohttp
+from api import API_KEY, WEATHER_URL
 
-API_KEY = "41dc09da6aae7e0f82a4665d15f8a901"
-WEATHER_URL = "https://api.openweathermap.org/data/2.5/weather"
+CITIES = {
+    "Казахстан": [" Алматы", "Астана"],
+    "Россия": ["Москва"]
+}
 
-async def get_weather():
+async def get_weather(city: str = " Алматы"):
     params = { 
         "q": "Алматы",  
         "appid": API_KEY,
@@ -21,3 +24,6 @@ async def get_weather():
                 )
             else:
                 return "Ошибка. Не удалось получить погоду для Алматы."
+            
+def get_available_cities():
+    return CITIES
