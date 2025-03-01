@@ -11,7 +11,8 @@ from aiogram.types import (
 
 from aiogram.filters import Command
 from aiogram.client.default import DefaultBotProperties # нужно для указания стандартных настроек бота
-from api import Token #
+from api import Token 
+from weather import get_weather
 
 # Создаем объект - бот и диспетчер
 bot = Bot(token=Token, default=DefaultBotProperties(parse_mode="HTML"))
@@ -67,6 +68,10 @@ async def help_commmand(message: types.Message):
     )
     await message.answer(command_text)
 
+@dp.message(Command("weather"))
+async def weather_command(message : types.Message):
+    weather_info = await get_weather()
+    await message.reply(weather_info)
 
 async def main(): # основная функция, которая запускает нашего бота
     await dp.start_polling(bot) # бот отслеживает новые команды от пользователя
